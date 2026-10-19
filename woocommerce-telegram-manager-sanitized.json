@@ -1,0 +1,3536 @@
+{
+  "name": "Danira - WooCommerce Telegram Manager - MVP",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "id": "8f10c469-b7a8-4f33-868d-b5f07d383d72",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "ALLOWED_TELEGRAM_USER_IDS",
+              "value": "REPLACE_WITH_YOUR_TELEGRAM_USER_ID",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "chatId",
+              "value": "={{ String($json.message?.chat?.id ?? $json.callback_query?.message?.chat?.id ?? $json.callback_query?.from?.id ?? \"\") }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "userId",
+              "value": "={{ String($json.message?.from?.id ?? $json.callback_query?.from?.id ?? \"\") }}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "text",
+              "value": "={{ $json.message?.text ?? \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "a5",
+              "name": "callbackData",
+              "value": "={{ $json.callback_query?.data ?? \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "a6",
+              "name": "callbackId",
+              "value": "={{ $json.callback_query?.id ?? \"\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "30663b00-2432-4acf-89b5-c5f95d59adca",
+      "name": "Config and Allowlist",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "auth",
+              "leftValue": "={{ $json.ALLOWED_TELEGRAM_USER_IDS.split(',').map(s => s.trim()).includes($json.userId) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "77bbf537-1dc8-413c-85df-0e791ce11eda",
+      "name": "Authorized User Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "iscb",
+              "leftValue": "={{ $json.callbackData }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d0eaaf95-2b47-49df-8c90-350d3d4d02d1",
+      "name": "Is Menu Callback?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -896,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "queryId": "={{ $json.callbackId }}",
+        "additionalFields": {}
+      },
+      "id": "c546b873-085b-4c7a-931e-003c96633d8f",
+      "name": "Answer Callback Query",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -800,
+        -272
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "r0",
+                    "leftValue": "={{ [\"act_order\",\"act_product\",\"act_price\",\"act_stock\",\"act_update_price\"].includes($json.callbackData) }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ID actions"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "r1",
+                    "leftValue": "={{ $json.callbackData }}",
+                    "rightValue": "act_sales",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Sales"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "r2",
+                    "leftValue": "={{ [\"act_update_stock\"].includes($json.callbackData) }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Coming soon"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "r3",
+                    "leftValue": "={{ $json.callbackData }}",
+                    "rightValue": "act_cancel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cancel"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "r4",
+                    "leftValue": "={{ $json.callbackData }}",
+                    "rightValue": "act_menu",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Menu"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "r5",
+                    "leftValue": "={{ /^(pc|px)_[0-9a-f]{32}$/.test($json.callbackData) }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Price confirmation"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Invalid callback"
+        }
+      },
+      "id": "63a664de-281f-44f3-8ea3-928e1e183ea5",
+      "name": "Menu Action Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -672,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": ""
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "keyValue": "={{ $json.userId }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $json.userId }}",
+            "pending_action": "={{ $json.callbackData.replace(\"act_\", \"\") }}",
+            "expires_at": "={{ Date.now() + 5 * 60 * 1000 }}",
+            "chat_id": "={{ $json.chatId }}",
+            "product_id": "",
+            "product_name": "",
+            "original_price": "",
+            "proposed_price": "",
+            "token": ""
+          },
+          "matchingColumns": [
+            "user_id"
+          ],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "pending_action",
+              "displayName": "pending_action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "expires_at",
+              "displayName": "expires_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "product_id",
+              "displayName": "product_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "product_name",
+              "displayName": "product_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "original_price",
+              "displayName": "original_price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "proposed_price",
+              "displayName": "proposed_price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c503ea93-be6a-4ce5-ac55-5af0157405c8",
+      "name": "Save Pending Session",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -448,
+        -560
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $(\"Config and Allowlist\").first().json.chatId }}",
+        "text": "={{ $(\"Config and Allowlist\").first().json.callbackData === \"act_order\" ? \"Please enter the order ID.\" : \"Please enter the product ID.\" }}",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "❌ Cancel",
+                    "additionalFields": {
+                      "callback_data": "act_cancel"
+                    }
+                  },
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "711bba15-61d2-4bf4-a2fa-c270180b030c",
+      "name": "Ask For ID",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -224,
+        -560
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ps",
+              "name": "text",
+              "value": "/sales",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "ebb7e65e-1558-4d6c-b641-6e462fe80b43",
+      "name": "Prepare Sales Command",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -448,
+        -368
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "1a6adf0f-5498-4eea-a08e-540d0116ebfc",
+      "name": "Existing Commands Entry",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        224,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "isorder",
+              "leftValue": "={{ /^\\/order(?:@\\w+)?(\\s|$)/i.test($json.text.trim()) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "42ec6c5c-91ce-4393-a245-947d906ae7ec",
+      "name": "Is Order Command?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "o1",
+              "name": "orderId",
+              "value": "={{ (() => { const m = $json.text.trim().match(/^\\/order(?:@\\w+)?\\s+(\\d+)$/i); return m && Number(m[1]) > 0 ? String(Number(m[1])) : \"\"; })() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "b380a3ea-ecef-43e4-a97a-f31717b413fb",
+      "name": "Parse Order Command",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        -288
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "validorder",
+              "leftValue": "={{ $json.orderId }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0016b4e7-bd9b-4b61-b57d-8ea7eb2a7fc0",
+      "name": "Valid Order Command?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        -288
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "order",
+        "operation": "get",
+        "orderId": "={{ $json.orderId }}"
+      },
+      "id": "90c35784-f390-4270-83ca-05a551e45243",
+      "name": "WooCommerce Order Lookup",
+      "type": "n8n-nodes-base.wooCommerce",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        -384
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Config and Allowlist').item.json.chatId }}",
+        "text": "=Order ID: {{ $json.id }}\nStatus: {{ $json.status || \"-\" }}\nDate: {{ $json.date_created || \"-\" }}\nCustomer: {{ [$json.billing?.first_name, $json.billing?.last_name].filter(Boolean).join(\" \").replace(/&/g, \"&amp;\").replace(/</g, \"&lt;\").replace(/>/g, \"&gt;\") || \"-\" }}\nTotal: {{ $json.total }} {{ $json.currency }}\nProducts:\n{{ ($json.line_items ?? []).map(i => \"- \" + String(i.name ?? \"-\").replace(/&/g, \"&amp;\").replace(/</g, \"&lt;\").replace(/>/g, \"&gt;\") + \" x \" + i.quantity).join(\"\\n\") || \"-\" }}",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "b20dadf7-5345-4b0e-97cb-bda1d4126fed",
+      "name": "Order Response",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1344,
+        -384
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "nf",
+              "leftValue": "={{ /woocommerce_rest_shop_order_invalid_id|\\b404\\b|could not be found/i.test(JSON.stringify($json)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8c082678-47d7-4601-a4cd-b9ca426b587b",
+      "name": "Order Not Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        -192
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Config and Allowlist').first().json.chatId }}",
+        "text": "Order not found. Please check the order ID.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "749d8000-0ff7-4760-8fc1-cf153a8fe219",
+      "name": "Order Not Found Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1568,
+        -192
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Config and Allowlist').first().json.chatId }}",
+        "text": "Unable to retrieve order information right now. Please try again later.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "bece22ba-3808-477a-8770-f802787bfa6c",
+      "name": "Order Error Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1568,
+        -384
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "Usage: /order 123",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "0dcadc89-b1a3-43f6-a189-a3719504b1a7",
+      "name": "Order Usage Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1120,
+        -192
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "issales",
+              "leftValue": "={{ /^\\/sales(?:@\\w+)?(\\s|$)/i.test($json.text.trim()) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f0aecbcb-01a4-4f17-b673-7540cb5a7d78",
+      "name": "Is Sales Command?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "order",
+        "operation": "getAll",
+        "returnAll": true,
+        "options": {
+          "after": "={{ new Date(Date.now() - 48 * 3600 * 1000).toISOString() }}",
+          "order": "desc",
+          "orderBy": "date",
+          "status": "any"
+        }
+      },
+      "id": "3af24c2f-d20b-4e22-9163-ad1a8baaeb7e",
+      "name": "WooCommerce Sales Lookup",
+      "type": "n8n-nodes-base.wooCommerce",
+      "typeVersion": 1,
+      "position": [
+        896,
+        288
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const orders = $input.all().map(i => i.json).filter(o => o && o.id && o.date_created);\n// Store timezone offset derived from the orders' own local vs GMT timestamps\nconst ref = orders.find(o => o.date_created_gmt);\nconst offsetMs = ref ? Date.parse(ref.date_created + 'Z') - Date.parse(ref.date_created_gmt + 'Z') : 0;\nconst todayStr = new Date(Date.now() + offsetMs).toISOString().slice(0, 10);\nconst today = orders.filter(o => String(o.date_created).slice(0, 10) === todayStr);\nconst paidStatuses = ['processing', 'completed'];\nconst paid = today.filter(o => paidStatuses.includes(o.status));\nconst pending = today.filter(o => o.status === 'pending');\nconst sales = paid.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);\nconst currency = (today[0] || orders[0] || {}).currency || 'N/A';\nconst text = [\n  'Sales summary for ' + todayStr + ' (store time)',\n  'Total orders today: ' + today.length,\n  'Paid orders (processing/completed): ' + paid.length,\n  'Pending payment orders: ' + pending.length,\n  'Total sales: ' + sales.toFixed(2) + ' ' + currency,\n  'Currency: ' + currency\n].join('\\n');\nreturn [{ json: { text, totalOrders: today.length, paidOrders: paid.length, pendingOrders: pending.length, totalSales: sales, currency } }];"
+      },
+      "id": "2c96a5e8-e0aa-4d4e-a1f5-151b7f976dca",
+      "name": "Calculate Today Sales",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Config and Allowlist').first().json.chatId }}",
+        "text": "={{ $json.text }}",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "2cb8eda5-c01a-467b-a37b-55c77979d14d",
+      "name": "Sales Response",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1344,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Config and Allowlist').first().json.chatId }}",
+        "text": "Unable to retrieve sales information right now. Please try again later.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "94324f9b-06fc-43ea-959d-e04c95c650f0",
+      "name": "Sales Error Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1120,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ps1",
+              "name": "psCommand",
+              "value": "={{ (() => { const m = $json.text.trim().match(/^\\/(price|stock)(?:@\\w+)?(?:\\s|$)/i); return m ? m[1].toLowerCase() : \"\"; })() }}",
+              "type": "string"
+            },
+            {
+              "id": "ps2",
+              "name": "psProductId",
+              "value": "={{ (() => { const m = $json.text.trim().match(/^\\/(?:price|stock)(?:@\\w+)?\\s+(\\d+)$/i); return m && Number(m[1]) > 0 ? String(Number(m[1])) : \"\"; })() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "9c7bf828-aa0e-41ec-adad-656e3a0cdaf5",
+      "name": "Parse Price/Stock Command",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "isps",
+              "leftValue": "={{ $json.psCommand }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0f526020-3031-4836-bd39-4f73b9babfeb",
+      "name": "Is Price/Stock Command?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1120,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "validps",
+              "leftValue": "={{ $json.psProductId }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6f1f9ac6-d9fa-448e-aa59-c99e57ca691a",
+      "name": "Valid Price/Stock ID?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "productId": "={{ $json.psProductId }}"
+      },
+      "id": "4f5105b6-3509-4236-90bf-242a544027e9",
+      "name": "WooCommerce Price/Stock Lookup",
+      "type": "n8n-nodes-base.wooCommerce",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        240
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const cmd = $('Parse Price/Stock Command').first().json.psCommand;\nconst p = $input.first().json;\nconst esc = s => String(s ?? '-').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst html = String(p.price_html || '');\nconst sym = html.match(/currencySymbol[^>]*>([^<]*)</);\nconst currency = sym ? sym[1].replace(/&#(\\d+);/g, (m, c) => String.fromCharCode(Number(c))).replace(/&amp;/g, '&') : 'not available';\nlet text;\nif (cmd === 'price') {\n  const lines = [\n    'Product: ' + esc(p.name),\n    'Regular price: ' + esc(p.regular_price || '-'),\n    'Current price: ' + esc(p.price || '-')\n  ];\n  if (p.on_sale && p.sale_price) lines.push('Sale price: ' + esc(p.sale_price));\n  lines.push('Currency: ' + esc(currency));\n  text = lines.join('\\n');\n} else {\n  const tracked = p.manage_stock === true && p.stock_quantity !== null && p.stock_quantity !== undefined;\n  text = [\n    'Product: ' + esc(p.name),\n    'Stock management: ' + (p.manage_stock === true ? 'Enabled' : 'Disabled'),\n    'Stock quantity: ' + (tracked ? p.stock_quantity : 'Stock quantity not tracked'),\n    'Stock status: ' + esc(p.stock_status || '-')\n  ].join('\\n');\n}\nreturn [{ json: { text } }];"
+      },
+      "id": "c53ed19a-9bf3-48fb-9850-c8b522a58e71",
+      "name": "Format Price/Stock Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Config and Allowlist').first().json.chatId }}",
+        "text": "={{ $json.text }}",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "30f733ef-05b6-4ddc-9802-09db224a320d",
+      "name": "Price/Stock Response",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2016,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "pnf",
+              "leftValue": "={{ /woocommerce_rest_product_invalid_id|\\b404\\b|could not be found/i.test(JSON.stringify($json)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "65f21c9b-48cc-4b8c-9293-cb9e7fc7ea54",
+      "name": "Product Not Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1792,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Config and Allowlist').first().json.chatId }}",
+        "text": "Product not found. Please check the product ID.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "8d9b1f86-8333-4761-86a7-857d190c2424",
+      "name": "Product Not Found Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2016,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Config and Allowlist').first().json.chatId }}",
+        "text": "Unable to retrieve product information right now. Please try again later.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "a46448cf-c11f-4c6e-92c4-0f02daeb6647",
+      "name": "Product Error Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2016,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "=Usage: /{{ $json.psCommand }} 123 (PRODUCT_ID must be a positive whole number)",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "689b05e0-83d5-4219-a924-85b9a807ae3d",
+      "name": "Price/Stock Usage Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1568,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "p1",
+              "name": "productId",
+              "value": "={{ (() => { const m = $json.text.trim().match(/^\\/product(?:@\\w+)?\\s+(\\d+)$/i); return m && Number(m[1]) > 0 ? String(Number(m[1])) : \"\"; })() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "ff5a4e5b-fac7-41a8-b53b-9e62ebce3ecf",
+      "name": "Parse Product Command",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.productId }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a30e746c-dd0c-4b91-82c0-1f635e382fa2",
+      "name": "Valid Command?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "productId": "={{ $json.productId }}"
+      },
+      "id": "df1a3803-b5ae-44da-8792-32cbd2d420e7",
+      "name": "WooCommerce Product Lookup",
+      "type": "n8n-nodes-base.wooCommerce",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Config and Allowlist').item.json.chatId }}",
+        "text": "=Product ID: {{ $json.id }}\nName: {{ String($json.name ?? \"-\").replace(/&/g, \"&amp;\").replace(/</g, \"&lt;\").replace(/>/g, \"&gt;\") }}\nSKU: {{ $json.sku || \"-\" }}\nRegular price: {{ $json.regular_price || \"-\" }}\nCurrent price: {{ $json.price || \"-\" }}\nStock quantity: {{ $json.stock_quantity ?? \"Not tracked\" }}\nStock status: {{ $json.stock_status || \"-\" }}",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "91e8d281-2f92-435f-bec6-ee15bf691e17",
+      "name": "Telegram Response",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1344,
+        0
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Config and Allowlist').item.json.chatId }}",
+        "text": "Sorry, I could not retrieve that product. It may not exist, or the store is temporarily unavailable. Please check the ID and try again.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "ebd88857-4ef4-4ffd-8694-336c6c565d9c",
+      "name": "Lookup Error Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1568,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "Usage: /product 123",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "2b96a1bb-f4f3-468f-86ec-e12c615eabcf",
+      "name": "Usage Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1120,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $(\"Config and Allowlist\").first().json.chatId }}",
+        "text": "This feature is coming soon.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "4bde619d-94d5-4203-bab8-6c7934f20f14",
+      "name": "Coming Soon Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -448,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": ""
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "keyValue": "={{ $(\"Config and Allowlist\").first().json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f84dcd82-6cdc-445b-9c4f-92106b9770d3",
+      "name": "Clear Session (Cancel)",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -448,
+        16
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $(\"Config and Allowlist\").first().json.chatId }}",
+        "text": "Action cancelled.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "02e1827d-4531-4edc-80f0-ea6f6c928020",
+      "name": "Cancelled Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -448,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": ""
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "keyValue": "={{ $(\"Config and Allowlist\").first().json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ecf22799-48c5-4994-9bb8-4f8a5c91a068",
+      "name": "Clear Session (Menu)",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -448,
+        400
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $(\"Config and Allowlist\").first().json.chatId }}",
+        "text": "Welcome to Danira Store Manager!\n\nChoose an option below to manage your WooCommerce store.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "📦 Find Order",
+                    "additionalFields": {
+                      "callback_data": "act_order"
+                    }
+                  },
+                  {
+                    "text": "📊 Today's Sales",
+                    "additionalFields": {
+                      "callback_data": "act_sales"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🔎 Find Product",
+                    "additionalFields": {
+                      "callback_data": "act_product"
+                    }
+                  },
+                  {
+                    "text": "💰 Check Price",
+                    "additionalFields": {
+                      "callback_data": "act_price"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "📋 Check Stock",
+                    "additionalFields": {
+                      "callback_data": "act_stock"
+                    }
+                  },
+                  {
+                    "text": "✏️ Update Price",
+                    "additionalFields": {
+                      "callback_data": "act_update_price"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "📦 Update Stock",
+                    "additionalFields": {
+                      "callback_data": "act_update_stock"
+                    }
+                  },
+                  {
+                    "text": "❌ Cancel",
+                    "additionalFields": {
+                      "callback_data": "act_cancel"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "18260fd9-8063-40f5-812e-baf8902ca49f",
+      "name": "Send Main Menu",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -448,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": ""
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "keyValue": "={{ $json.userId }}"
+            },
+            {
+              "keyName": "chat_id",
+              "keyValue": "={{ $json.chatId }}"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "id": "984aa210-37bd-487a-93d2-e9364b50fb3e",
+      "name": "Get Price Request",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -448,
+        1200
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Config and Allowlist').first().json;\nconst row = $input.first().json || {};\nconst m = /^(pc|px)_([0-9a-f]{32})$/.exec(String(cfg.callbackData || ''));\nlet decision = 'invalid';\nif (m && row.token && String(row.user_id) === String(cfg.userId) && String(row.chat_id) === String(cfg.chatId) && row.pending_action === 'price_confirm' && String(row.token) === m[2]) {\n  decision = Number(row.expires_at) > Date.now() ? (m[1] === 'pc' ? 'confirm' : 'cancel') : 'expired';\n}\nreturn [{ json: { decision } }];"
+      },
+      "id": "05d96e11-f770-4bd3-a067-c44f645b05bb",
+      "name": "Validate Price Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "pd0",
+                    "leftValue": "={{ $json.decision }}",
+                    "rightValue": "confirm",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "confirm"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "pd1",
+                    "leftValue": "={{ $json.decision }}",
+                    "rightValue": "cancel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cancel"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "pd2",
+                    "leftValue": "={{ $json.decision }}",
+                    "rightValue": "expired",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "expired"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Invalid request"
+        }
+      },
+      "id": "fa4a5bac-419f-4e71-8913-c26a3a8c55a0",
+      "name": "Price Decision",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        0,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": ""
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "keyValue": "={{ $('Config and Allowlist').first().json.userId }}"
+            },
+            {
+              "keyName": "chat_id",
+              "keyValue": "={{ $('Config and Allowlist').first().json.chatId }}"
+            },
+            {
+              "keyName": "pending_action",
+              "keyValue": "price_confirm"
+            },
+            {
+              "keyName": "token",
+              "keyValue": "={{ $('Config and Allowlist').first().json.callbackData.slice(3) }}"
+            },
+            {
+              "keyName": "expires_at",
+              "condition": "gt",
+              "keyValue": "={{ Date.now() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cb3d3b9e-8085-488e-925d-658a1e33df32",
+      "name": "Consume Price Request",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -224,
+        624
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "rc",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "05a8aa0b-d166-4267-ad83-20073fa9789d",
+      "name": "Request Claimed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Config and Allowlist').first().json.chatId }}",
+        "text": "Confirmation verified. TEST MODE: No price was changed.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "94d53eef-1603-4db0-908f-21ca26c33f0b",
+      "name": "Price Confirmed Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $(\"Config and Allowlist\").first().json.chatId }}",
+        "text": "This button is no longer valid. Please open the menu again.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "08183f2b-752f-4bb5-945e-6995dcaa83d6",
+      "name": "Invalid Callback Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -448,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Config and Allowlist').first().json.chatId }}",
+        "text": "Price update cancelled.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "67fdb4f7-f249-4838-813d-3f70d8e38bf9",
+      "name": "Price Cancelled Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        1488
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": ""
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "keyValue": "={{ $(\"Config and Allowlist\").first().json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "95de4c3d-3edf-4dd5-ae7b-1fb1e37783ac",
+      "name": "Clear Session (Expired)",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        1104
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $(\"Config and Allowlist\").first().json.chatId }}",
+        "text": "Your session has expired. Please start again from the menu.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "06568291-cf36-4633-8879-c5970ebee59c",
+      "name": "Session Expired Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        1296
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ismenu",
+              "leftValue": "={{ /^\\/(start|menu)(?:@\\w+)?\\s*$/i.test($json.text.trim()) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3ff45111-9dc9-4e2d-b8f9-7c25fba6ffc7",
+      "name": "Is Menu Command?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -672,
+        992
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": ""
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "keyValue": "={{ $json.userId }}"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "id": "cc509c25-759c-4ad4-a302-08be6f2ead91",
+      "name": "Get Session",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -448,
+        1008
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Config and Allowlist').first().json;\nconst row = $input.first().json || {};\nconst text = String(cfg.text || '').trim();\nconst out = (route, extra) => [{ json: Object.assign({}, cfg, { route }, extra || {}) }];\nconst hasSession = !!row.pending_action && String(row.user_id) === String(cfg.userId) && (!row.chat_id || String(row.chat_id) === String(cfg.chatId));\nif (text.startsWith('/') || !hasSession) return out('forward');\nif (Number(row.expires_at) < Date.now()) return out('expired');\nconst pa = row.pending_action;\nif (pa === 'update_price') {\n  const pid = /^[0-9]+$/.test(text) ? Number(text) : 0;\n  if (!Number.isSafeInteger(pid) || pid <= 0) return out('invalid');\n  return out('price_lookup', { productId: String(pid) });\n}\nif (pa === 'update_price_new') {\n  // PRICE_DECIMALS: store currency precision is assumed to be 2 (not read from WooCommerce settings)\n  const ok = /^(0|[1-9][0-9]{0,11})([.][0-9]{1,2})?$/.test(text) && Number.isFinite(Number(text));\n  if (!ok) return out('price_invalid');\n  return out('price_propose', { productId: row.product_id, productName: row.product_name, originalPrice: row.original_price, newPrice: Number(text).toFixed(2) });\n}\nif (pa === 'price_confirm') return out('price_wait');\nconst commands = { order: '/order', product: '/product', price: '/price', stock: '/stock' };\nconst cmd = commands[row.pending_action];\nif (!cmd) return out('expired');\nconst n = /^[0-9]+$/.test(text) ? Number(text) : 0;\nif (!Number.isSafeInteger(n) || n <= 0) return out('invalid');\nreturn out('valid', { text: cmd + ' ' + n });"
+      },
+      "id": "6b5410a4-052d-4e68-b4fd-6e3b37d11cc8",
+      "name": "Evaluate Session",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "sr0",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "forward",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "forward"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "sr1",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "valid",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "valid"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "sr2",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "invalid",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "invalid"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "sr3",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "expired",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "expired"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "sr4",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "price_lookup",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "price_lookup"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "sr5",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "price_propose",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "price_propose"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "sr6",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "price_invalid",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "price_invalid"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "sr7",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "price_wait",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "price_wait"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b8141282-1ef3-40cd-b3af-d46961343e6a",
+      "name": "Session Route",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        0,
+        976
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": ""
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "keyValue": "={{ $(\"Config and Allowlist\").first().json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7b559188-6830-487f-adf1-69e0709aabc2",
+      "name": "Clear Session (Completed)",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        720
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $(\"Config and Allowlist\").first().json.chatId }}",
+        "text": "Invalid ID. Please enter a valid positive number.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "❌ Cancel",
+                    "additionalFields": {
+                      "callback_data": "act_cancel"
+                    }
+                  },
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "9235658a-e640-4bd0-b5f4-eb9cb483ebb6",
+      "name": "Invalid ID Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "productId": "={{ $json.productId }}"
+      },
+      "id": "afd52a9a-5c16-43a1-b6e3-1a9f5742ca36",
+      "name": "WooCommerce Price Update Lookup",
+      "type": "n8n-nodes-base.wooCommerce",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        1792
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": ""
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "keyValue": "={{ $('Config and Allowlist').first().json.userId }}"
+            },
+            {
+              "keyName": "chat_id",
+              "keyValue": "={{ $('Config and Allowlist').first().json.chatId }}"
+            },
+            {
+              "keyName": "pending_action",
+              "keyValue": "update_price"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "pending_action": "update_price_new",
+            "product_id": "={{ String($json.id) }}",
+            "product_name": "={{ String($json.name ?? \"\") }}",
+            "original_price": "={{ String($json.price ?? \"\") }}",
+            "expires_at": "={{ Date.now() + 5 * 60 * 1000 }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "pending_action",
+              "displayName": "pending_action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "expires_at",
+              "displayName": "expires_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "product_id",
+              "displayName": "product_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "product_name",
+              "displayName": "product_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "original_price",
+              "displayName": "original_price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "proposed_price",
+              "displayName": "proposed_price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f0e9b0e4-737c-477d-9031-c6f2ad7ad8cd",
+      "name": "Save Price Target",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1792,
+        2064
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Config and Allowlist').first().json.chatId }}",
+        "text": "=Product: {{ String($('WooCommerce Price Update Lookup').first().json.name ?? \"-\").replace(/&/g, \"&amp;\").replace(/</g, \"&lt;\").replace(/>/g, \"&gt;\") }}\nCurrent price: {{ $('WooCommerce Price Update Lookup').first().json.price || \"-\" }}\n\nPlease enter the new price.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "❌ Cancel",
+                    "additionalFields": {
+                      "callback_data": "act_cancel"
+                    }
+                  },
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "394b782d-0796-42aa-a8de-d5f74e455d10",
+      "name": "Ask New Price",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2016,
+        2064
+      ]
+    },
+    {
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "token",
+        "encodingType": "hex"
+      },
+      "id": "a41063dc-9a85-4154-958e-f5d0bb325872",
+      "name": "Generate Confirmation Token",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        224,
+        1936
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": ""
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "keyValue": "={{ $('Config and Allowlist').first().json.userId }}"
+            },
+            {
+              "keyName": "chat_id",
+              "keyValue": "={{ $('Config and Allowlist').first().json.chatId }}"
+            },
+            {
+              "keyName": "pending_action",
+              "keyValue": "update_price_new"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "pending_action": "price_confirm",
+            "proposed_price": "={{ $('Evaluate Session').first().json.newPrice }}",
+            "token": "={{ $('Generate Confirmation Token').first().json.token }}",
+            "expires_at": "={{ Date.now() + 5 * 60 * 1000 }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "pending_action",
+              "displayName": "pending_action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "expires_at",
+              "displayName": "expires_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "product_id",
+              "displayName": "product_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "product_name",
+              "displayName": "product_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "original_price",
+              "displayName": "original_price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "proposed_price",
+              "displayName": "proposed_price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6d60288f-0d03-4944-a565-ce608bbb9afc",
+      "name": "Save Price Proposal",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        1936
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Config and Allowlist').first().json.chatId }}",
+        "text": "=Please confirm this price change request:\nProduct ID: {{ $('Evaluate Session').first().json.productId }}\nProduct name: {{ String($('Evaluate Session').first().json.productName ?? \"-\").replace(/&/g, \"&amp;\").replace(/</g, \"&lt;\").replace(/>/g, \"&gt;\") }}\nCurrent price: {{ $('Evaluate Session').first().json.originalPrice || \"-\" }}\nProposed new price: {{ $('Evaluate Session').first().json.newPrice }}\n\nTEST MODE: confirming will not change any price.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Confirm",
+                    "additionalFields": {
+                      "callback_data": "={{ \"pc_\" + $('Generate Confirmation Token').first().json.token }}"
+                    }
+                  },
+                  {
+                    "text": "❌ Cancel",
+                    "additionalFields": {
+                      "callback_data": "={{ \"px_\" + $('Generate Confirmation Token').first().json.token }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "fc684f1a-aaf9-4a38-996c-314917597ce9",
+      "name": "Send Price Confirmation",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        1936
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Config and Allowlist').first().json.chatId }}",
+        "text": "Invalid price. Please enter a non-negative number using a dot as the decimal separator, with at most 2 decimal places (for example 19.99).",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "❌ Cancel",
+                    "additionalFields": {
+                      "callback_data": "act_cancel"
+                    }
+                  },
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "9c0f0cff-f79e-475c-9c11-2ae8d486531a",
+      "name": "Invalid Price Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        2128
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Config and Allowlist').first().json.chatId }}",
+        "text": "A price update is waiting for your confirmation. Please use the Confirm or Cancel buttons, or go back to the menu.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Back to Menu",
+                    "additionalFields": {
+                      "callback_data": "act_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "3a7aed64-1c0d-48db-bfb0-df242740a2a0",
+      "name": "Awaiting Confirmation Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        2320
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "Access denied",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "16c371ff-169e-409a-8a1a-8050a7e35234",
+      "name": "Access Denied",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        288
+      ]
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Config and Allowlist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config and Allowlist": {
+      "main": [
+        [
+          {
+            "node": "Authorized User Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Authorized User Check": {
+      "main": [
+        [
+          {
+            "node": "Is Menu Callback?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Access Denied",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Menu Callback?": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback Query",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Menu Action Router",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Is Menu Command?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Menu Action Router": {
+      "main": [
+        [
+          {
+            "node": "Save Pending Session",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Sales Command",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Coming Soon Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clear Session (Cancel)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Cancelled Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clear Session (Menu)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Main Menu",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Price Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invalid Callback Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Pending Session": {
+      "main": [
+        [
+          {
+            "node": "Ask For ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Sales Command": {
+      "main": [
+        [
+          {
+            "node": "Existing Commands Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Existing Commands Entry": {
+      "main": [
+        [
+          {
+            "node": "Is Order Command?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Order Command?": {
+      "main": [
+        [
+          {
+            "node": "Parse Order Command",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Is Sales Command?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Order Command": {
+      "main": [
+        [
+          {
+            "node": "Valid Order Command?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Order Command?": {
+      "main": [
+        [
+          {
+            "node": "WooCommerce Order Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Order Usage Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WooCommerce Order Lookup": {
+      "main": [
+        [
+          {
+            "node": "Order Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Order Not Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Order Not Found?": {
+      "main": [
+        [
+          {
+            "node": "Order Not Found Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Order Error Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Sales Command?": {
+      "main": [
+        [
+          {
+            "node": "WooCommerce Sales Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse Price/Stock Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WooCommerce Sales Lookup": {
+      "main": [
+        [
+          {
+            "node": "Calculate Today Sales",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sales Error Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Today Sales": {
+      "main": [
+        [
+          {
+            "node": "Sales Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Price/Stock Command": {
+      "main": [
+        [
+          {
+            "node": "Is Price/Stock Command?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Price/Stock Command?": {
+      "main": [
+        [
+          {
+            "node": "Valid Price/Stock ID?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse Product Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Price/Stock ID?": {
+      "main": [
+        [
+          {
+            "node": "WooCommerce Price/Stock Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Price/Stock Usage Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WooCommerce Price/Stock Lookup": {
+      "main": [
+        [
+          {
+            "node": "Format Price/Stock Reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Product Not Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Price/Stock Reply": {
+      "main": [
+        [
+          {
+            "node": "Price/Stock Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Product Not Found?": {
+      "main": [
+        [
+          {
+            "node": "Product Not Found Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Product Error Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Product Command": {
+      "main": [
+        [
+          {
+            "node": "Valid Command?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Command?": {
+      "main": [
+        [
+          {
+            "node": "WooCommerce Product Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Usage Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WooCommerce Product Lookup": {
+      "main": [
+        [
+          {
+            "node": "Telegram Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Response": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Lookup Error Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Price Request": {
+      "main": [
+        [
+          {
+            "node": "Validate Price Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Price Request": {
+      "main": [
+        [
+          {
+            "node": "Price Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Price Decision": {
+      "main": [
+        [
+          {
+            "node": "Consume Price Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clear Session (Cancel)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Price Cancelled Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clear Session (Expired)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Session Expired Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invalid Callback Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consume Price Request": {
+      "main": [
+        [
+          {
+            "node": "Request Claimed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request Claimed?": {
+      "main": [
+        [
+          {
+            "node": "Price Confirmed Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invalid Callback Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Menu Command?": {
+      "main": [
+        [
+          {
+            "node": "Send Main Menu",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Session": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Session": {
+      "main": [
+        [
+          {
+            "node": "Session Route",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Session Route": {
+      "main": [
+        [
+          {
+            "node": "Existing Commands Entry",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clear Session (Completed)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Existing Commands Entry",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invalid ID Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clear Session (Expired)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Session Expired Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "WooCommerce Price Update Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate Confirmation Token",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invalid Price Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Awaiting Confirmation Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WooCommerce Price Update Lookup": {
+      "main": [
+        [
+          {
+            "node": "Save Price Target",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Product Not Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Price Target": {
+      "main": [
+        [
+          {
+            "node": "Ask New Price",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Confirmation Token": {
+      "main": [
+        [
+          {
+            "node": "Save Price Proposal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Price Proposal": {
+      "main": [
+        [
+          {
+            "node": "Send Price Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}
